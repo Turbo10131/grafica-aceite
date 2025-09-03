@@ -1,1 +1,344 @@
-
+{
+  "Aceite de oliva virgen extra": [
+    {
+      "fecha": "2023-09-01",
+      "precio_eur_kg": 3.25
+    },
+    {
+      "fecha": "2023-10-01",
+      "precio_eur_kg": 3.35
+    },
+    {
+      "fecha": "2023-11-01",
+      "precio_eur_kg": 3.4
+    },
+    {
+      "fecha": "2023-12-01",
+      "precio_eur_kg": 3.55
+    },
+    {
+      "fecha": "2024-01-01",
+      "precio_eur_kg": 3.7
+    },
+    {
+      "fecha": "2024-02-01",
+      "precio_eur_kg": 3.75
+    },
+    {
+      "fecha": "2024-03-01",
+      "precio_eur_kg": 3.8
+    },
+    {
+      "fecha": "2024-04-01",
+      "precio_eur_kg": 3.85
+    },
+    {
+      "fecha": "2024-05-01",
+      "precio_eur_kg": 3.9
+    },
+    {
+      "fecha": "2024-06-01",
+      "precio_eur_kg": 4.0
+    },
+    {
+      "fecha": "2024-07-01",
+      "precio_eur_kg": 4.05
+    },
+    {
+      "fecha": "2024-08-01",
+      "precio_eur_kg": 4.1
+    },
+    {
+      "fecha": "2024-09-01",
+      "precio_eur_kg": 4.2
+    },
+    {
+      "fecha": "2024-10-01",
+      "precio_eur_kg": 4.25
+    },
+    {
+      "fecha": "2024-11-01",
+      "precio_eur_kg": 4.3
+    },
+    {
+      "fecha": "2024-12-01",
+      "precio_eur_kg": 4.35
+    },
+    {
+      "fecha": "2025-01-01",
+      "precio_eur_kg": 4.4
+    },
+    {
+      "fecha": "2025-02-01",
+      "precio_eur_kg": 4.45
+    },
+    {
+      "fecha": "2025-03-01",
+      "precio_eur_kg": 4.5
+    },
+    {
+      "fecha": "2025-04-01",
+      "precio_eur_kg": 4.55
+    },
+    {
+      "fecha": "2025-05-01",
+      "precio_eur_kg": 4.6
+    },
+    {
+      "fecha": "2025-06-01",
+      "precio_eur_kg": 4.7
+    },
+    {
+      "fecha": "2025-07-01",
+      "precio_eur_kg": 4.75
+    },
+    {
+      "fecha": "2025-08-01",
+      "precio_eur_kg": 4.8
+    },
+    {
+      "fecha": "2025-08-28",
+      "precio_eur_kg": 3.9
+    },
+    {
+      "fecha": "2025-09-01",
+      "precio_eur_kg": 3.933
+    },
+    {
+      "fecha": "2025-09-02",
+      "precio_eur_kg": 3.933
+    },
+    {
+      "fecha": "2025-09-03",
+      "precio_eur_kg": 3.933
+    }
+  ],
+  "Aceite de oliva virgen": [
+    {
+      "fecha": "2023-09-01",
+      "precio_eur_kg": 3.0
+    },
+    {
+      "fecha": "2023-10-01",
+      "precio_eur_kg": 3.05
+    },
+    {
+      "fecha": "2023-11-01",
+      "precio_eur_kg": 3.1
+    },
+    {
+      "fecha": "2023-12-01",
+      "precio_eur_kg": 3.2
+    },
+    {
+      "fecha": "2024-01-01",
+      "precio_eur_kg": 3.25
+    },
+    {
+      "fecha": "2024-02-01",
+      "precio_eur_kg": 3.3
+    },
+    {
+      "fecha": "2024-03-01",
+      "precio_eur_kg": 3.35
+    },
+    {
+      "fecha": "2024-04-01",
+      "precio_eur_kg": 3.4
+    },
+    {
+      "fecha": "2024-05-01",
+      "precio_eur_kg": 3.45
+    },
+    {
+      "fecha": "2024-06-01",
+      "precio_eur_kg": 3.55
+    },
+    {
+      "fecha": "2024-07-01",
+      "precio_eur_kg": 3.6
+    },
+    {
+      "fecha": "2024-08-01",
+      "precio_eur_kg": 3.65
+    },
+    {
+      "fecha": "2024-09-01",
+      "precio_eur_kg": 3.7
+    },
+    {
+      "fecha": "2024-10-01",
+      "precio_eur_kg": 3.75
+    },
+    {
+      "fecha": "2024-11-01",
+      "precio_eur_kg": 3.8
+    },
+    {
+      "fecha": "2024-12-01",
+      "precio_eur_kg": 3.85
+    },
+    {
+      "fecha": "2025-01-01",
+      "precio_eur_kg": 3.9
+    },
+    {
+      "fecha": "2025-02-01",
+      "precio_eur_kg": 3.95
+    },
+    {
+      "fecha": "2025-03-01",
+      "precio_eur_kg": 4.0
+    },
+    {
+      "fecha": "2025-04-01",
+      "precio_eur_kg": 4.05
+    },
+    {
+      "fecha": "2025-05-01",
+      "precio_eur_kg": 4.1
+    },
+    {
+      "fecha": "2025-06-01",
+      "precio_eur_kg": 4.15
+    },
+    {
+      "fecha": "2025-07-01",
+      "precio_eur_kg": 4.2
+    },
+    {
+      "fecha": "2025-08-01",
+      "precio_eur_kg": 4.25
+    },
+    {
+      "fecha": "2025-08-28",
+      "precio_eur_kg": 3.45
+    },
+    {
+      "fecha": "2025-09-01",
+      "precio_eur_kg": 3.475
+    },
+    {
+      "fecha": "2025-09-02",
+      "precio_eur_kg": 3.483
+    },
+    {
+      "fecha": "2025-09-03",
+      "precio_eur_kg": 3.483
+    }
+  ],
+  "Aceite de oliva lampante": [
+    {
+      "fecha": "2023-09-01",
+      "precio_eur_kg": 2.8
+    },
+    {
+      "fecha": "2023-10-01",
+      "precio_eur_kg": 2.85
+    },
+    {
+      "fecha": "2023-11-01",
+      "precio_eur_kg": 2.9
+    },
+    {
+      "fecha": "2023-12-01",
+      "precio_eur_kg": 2.95
+    },
+    {
+      "fecha": "2024-01-01",
+      "precio_eur_kg": 3.0
+    },
+    {
+      "fecha": "2024-02-01",
+      "precio_eur_kg": 3.05
+    },
+    {
+      "fecha": "2024-03-01",
+      "precio_eur_kg": 3.1
+    },
+    {
+      "fecha": "2024-04-01",
+      "precio_eur_kg": 3.15
+    },
+    {
+      "fecha": "2024-05-01",
+      "precio_eur_kg": 3.2
+    },
+    {
+      "fecha": "2024-06-01",
+      "precio_eur_kg": 3.25
+    },
+    {
+      "fecha": "2024-07-01",
+      "precio_eur_kg": 3.3
+    },
+    {
+      "fecha": "2024-08-01",
+      "precio_eur_kg": 3.35
+    },
+    {
+      "fecha": "2024-09-01",
+      "precio_eur_kg": 3.4
+    },
+    {
+      "fecha": "2024-10-01",
+      "precio_eur_kg": 3.45
+    },
+    {
+      "fecha": "2024-11-01",
+      "precio_eur_kg": 3.5
+    },
+    {
+      "fecha": "2024-12-01",
+      "precio_eur_kg": 3.55
+    },
+    {
+      "fecha": "2025-01-01",
+      "precio_eur_kg": 3.6
+    },
+    {
+      "fecha": "2025-02-01",
+      "precio_eur_kg": 3.65
+    },
+    {
+      "fecha": "2025-03-01",
+      "precio_eur_kg": 3.7
+    },
+    {
+      "fecha": "2025-04-01",
+      "precio_eur_kg": 3.75
+    },
+    {
+      "fecha": "2025-05-01",
+      "precio_eur_kg": 3.8
+    },
+    {
+      "fecha": "2025-06-01",
+      "precio_eur_kg": 3.85
+    },
+    {
+      "fecha": "2025-07-01",
+      "precio_eur_kg": 3.9
+    },
+    {
+      "fecha": "2025-08-01",
+      "precio_eur_kg": 3.95
+    },
+    {
+      "fecha": "2025-08-28",
+      "precio_eur_kg": 3.392
+    },
+    {
+      "fecha": "2025-09-01",
+      "precio_eur_kg": 3.363
+    },
+    {
+      "fecha": "2025-09-02",
+      "precio_eur_kg": 3.35
+    },
+    {
+      "fecha": "2025-09-03",
+      "precio_eur_kg": 3.35
+    }
+  ]
+}
