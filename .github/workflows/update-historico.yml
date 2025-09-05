@@ -1,29 +1,36 @@
-name: Actualizar histórico a JSON
+name: Actualizar histórico
 
 on:
   schedule:
-    - cron: "5 6 * * *"     # cada día 06:05 UTC
-  workflow_dispatch:        # ejecutable a mano
+    - cron: "15 5 * * *"   # todos los días 05:15 UTC
+  workflow_dispatch:       # permitir lanzarlo manualmente
 
 jobs:
-  build:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Ejecutar conversión TXT -> JSON
+      - name: Instalar dependencias (si las hubiera)
         run: |
-          python -V
-          python update_historico.py
+          python -m pip install --upgrade pip
 
-      - name: Commit & push si hay cambios
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Actualizar JSON del histórico (auto)"
-          file_pattern: "precio-aceite-historico.json"
+      - name: Ejecutar actualizador
+        run: python update_historico.py
+
+      - name: Commit & push si cambió algo
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: actualizar histórico (bot)"
+            git push
+          else
+            echo "Sin cambios."
+          fi
