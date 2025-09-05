@@ -1,109 +1,113 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-Convierte el histórico en texto plano (como el que tienes ahora) a un JSON válido.
-Lee:  precio-aceite-historico.json   (aunque sea texto)
-Escribe: precio-aceite-historico.json (JSON con 3 series)
-"""
-
-import re
+# convertir_historico.py
 import json
+import re
 from datetime import datetime
-from pathlib import Path
 
-# Archivos
-SRC_FILE = Path("precio-aceite-historico.json")   # actualmente es texto
-OUT_FILE = Path("precio-aceite-historico.json")   # lo SOBREESCRIBIMOS ya en JSON
+SRC_TXT = "historico.txt"                    # <-- el TXT crudo
+DEST_JSON = "precio-aceite-historico.json"   # <-- salida JSON
 
-# Patrones
-re_fecha = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")  # 26-08-2025
-re_precio = re.compile(r"(\d+[.,]\d+|\d+)")          # 3.833 / 3,833 / 3
-
-# Mapea las líneas de texto a nuestras claves JSON
-TIPOS = {
-    "virgen extra": "Aceite de oliva virgen extra",
-    # OJO: "virgen" a secas debe ir DESPUÉS de "virgen extra" para no comer el 'extra'
-    "virgen":       "Aceite de oliva virgen",
-    "lampante":     "Aceite de oliva lampante",
-}
-
-def normaliza_num(txt: str) -> float:
-    m = re_precio.search(txt)
-    if not m:
+# Normaliza "3,455 €" -> 3.455 (float)
+def _num(s: str):
+    s = s.replace("€", "").replace(" ", "").replace(",", ".")
+    try:
+        return float(s)
+    except:
         return None
-    return float(m.group(1).replace(",", "."))
 
-def detecta_tipo(line: str) -> str | None:
-    low = line.lower()
-    # primero chequeamos "virgen extra"
-    if "virgen extra" in low:
-        return TIPOS["virgen extra"]
-    # luego "virgen"
-    if " virgen " in f" {low} " or low.strip().startswith("aceite de oliva virgen "):
-        return TIPOS["virgen"]
-    # luego "lampante"
-    if "lampante" in low:
-        return TIPOS["lampante"]
+# Mapea una línea a tipo de aceite
+def _tipo_desde_linea(line: str):
+    l = line.lower()
+    if "virgen extra" in l:
+        return "Aceite de oliva virgen extra"
+    if re.search(r"\bvirgen\b", l) and "extra" not in l:
+        return "Aceite de oliva virgen"
+    if "lampante" in l:
+        return "Aceite de oliva lampante"
     return None
 
-def main():
-    if not SRC_FILE.exists():
-        raise SystemExit(f"No existe {SRC_FILE} en el repo.")
+# Extrae "3.833" de "3.833 €" o "3,833 €"
+def _precio_desde_linea(line: str):
+    m = re.search(r"(\d+[.,]\d+)\s*€", line)
+    if not m:
+        return None
+    return _num(m.group(1))
 
-    # Estructura de salida
+# Extrae fecha DD-MM-YYYY
+re_fecha = re.compile(r"\b(\d{2}-\d{2}-\d{4})\b")
+
+def _iso(dmy: str):
+    d = datetime.strptime(dmy, "%d-%m-%Y").date()
+    return d.isoformat()
+
+def convertir():
     data = {
         "Aceite de oliva virgen extra": [],
         "Aceite de oliva virgen": [],
         "Aceite de oliva lampante": [],
     }
 
-    current_date_iso = None
+    # Leemos el TXT crudo
+    with open(SRC_TXT, "r", encoding="utf-8") as f:
+        lines = [ln.strip() for ln in f if ln.strip()]
 
-    # Leemos el fuente línea a línea (texto)
-    with SRC_FILE.open("r", encoding="utf-8") as f:
-        for raw in f:
-            line = raw.strip()
+    fecha_actual_iso = None
+    # Limpiadores de ruido
+    basura = (
+        "tipo de aceite", "variedad", "precio €/kg",
+        "sin cierre de operaciones", "about:blank"
+    )
 
-            # 1) Fecha
-            mf = re_fecha.match(line)
-            if mf:
-                dd, mm, yyyy = mf.groups()
-                try:
-                    current_date_iso = datetime(int(yyyy), int(mm), int(dd)).strftime("%Y-%m-%d")
-                except ValueError:
-                    current_date_iso = None
-                continue
+    for ln in lines:
+        lo = ln.lower()
+        # Salta cabeceras/ruido
+        if any(b in lo for b in basura):
+            continue
 
-            # 2) Líneas con "Sin cierre de operaciones" -> ignorar
-            if "sin cierre de operaciones" in line.lower():
-                continue
+        # Captura fecha (si hay), y guarda como "fecha actual"
+        m = re_fecha.search(ln)
+        if m:
+            try:
+                fecha_actual_iso = _iso(m.group(1))
+            except:
+                fecha_actual_iso = None
+            continue
 
-            # 3) Detectar tipo y extraer precio
-            tipo = detecta_tipo(line)
-            if not tipo:
-                continue
+        if not fecha_actual_iso:
+            # No tenemos fecha asignada aún; continúa
+            continue
 
-            price = normaliza_num(line)
-            if price is None:
-                continue
+        # Detecta tipo y precio en líneas de producto
+        tipo = _tipo_desde_linea(ln)
+        if not tipo:
+            continue
 
-            if current_date_iso:
-                data[tipo].append({
-                    "fecha": current_date_iso,
-                    "precio_eur_kg": price
-                })
+        precio = _precio_desde_linea(ln)
+        if precio is None:
+            continue
 
-    # Ordenamos por fecha ascendente cada serie
-    for key in data:
-        data[key].sort(key=lambda x: x["fecha"])
+        data[tipo].append({
+            "fecha": fecha_actual_iso,
+            "precio_eur_kg": round(precio, 3)
+        })
 
-    # Guardamos en JSON bonico
-    with OUT_FILE.open("w", encoding="utf-8") as f:
+    # Ordena por fecha y quita duplicados (misma fecha para un tipo)
+    for k in data:
+        seen = set()
+        ordenados = []
+        for item in sorted(data[k], key=lambda x: x["fecha"]):
+            clave = item["fecha"]
+            if clave in seen:
+                # Si el mismo día aparece más de una vez, nos quedamos con el último
+                ordenados[-1] = item
+            else:
+                seen.add(clave)
+                ordenados.append(item)
+        data[k] = ordenados
+
+    with open(DEST_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    print(f"OK: generado JSON en {OUT_FILE} con {len(data['Aceite de oliva virgen extra'])} VE,"
-          f" {len(data['Aceite de oliva virgen'])} V, {len(data['Aceite de oliva lampante'])} L.")
+    print(f"OK → {DEST_JSON} generado con {sum(len(v) for v in data.values())} puntos.")
 
 if __name__ == "__main__":
-    main()
+    convertir()
