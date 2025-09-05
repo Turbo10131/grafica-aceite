@@ -1,113 +1,41 @@
-# convertir_historico.py
+# update_historico.py
 import json
-import re
-from datetime import datetime
+import os
+import subprocess
 
-SRC_TXT = "historico.txt"                    # <-- el TXT crudo
-DEST_JSON = "precio-aceite-historico.json"   # <-- salida JSON
+DEST_JSON = "precio-aceite-historico.json"
+SRC_TXT   = "historico.txt"
 
-# Normaliza "3,455 €" -> 3.455 (float)
-def _num(s: str):
-    s = s.replace("€", "").replace(" ", "").replace(",", ".")
+def es_json_valido(path):
     try:
-        return float(s)
-    except:
-        return None
+        with open(path, "r", encoding="utf-8") as f:
+            json.load(f)
+        return True
+    except Exception:
+        return False
 
-# Mapea una línea a tipo de aceite
-def _tipo_desde_linea(line: str):
-    l = line.lower()
-    if "virgen extra" in l:
-        return "Aceite de oliva virgen extra"
-    if re.search(r"\bvirgen\b", l) and "extra" not in l:
-        return "Aceite de oliva virgen"
-    if "lampante" in l:
-        return "Aceite de oliva lampante"
-    return None
+def main():
+    # 1) Si el "JSON" en repo es texto crudo, conviértelo a TXT fuente
+    if os.path.exists(DEST_JSON) and not es_json_valido(DEST_JSON):
+        print(f"[WARN] {DEST_JSON} no es JSON. Lo muevo a {SRC_TXT}…")
+        # Si ya existiera un historico.txt previo, lo sobreescribimos
+        if os.path.exists(SRC_TXT):
+            os.remove(SRC_TXT)
+        os.rename(DEST_JSON, SRC_TXT)
 
-# Extrae "3.833" de "3.833 €" o "3,833 €"
-def _precio_desde_linea(line: str):
-    m = re.search(r"(\d+[.,]\d+)\s*€", line)
-    if not m:
-        return None
-    return _num(m.group(1))
+    # 2) Si no hay fuente TXT, no podemos convertir
+    if not os.path.exists(SRC_TXT):
+        raise SystemExit(f"No existe {SRC_TXT}. Debes guardar aquí el texto crudo.")
 
-# Extrae fecha DD-MM-YYYY
-re_fecha = re.compile(r"\b(\d{2}-\d{2}-\d{4})\b")
+    # 3) Ejecuta convertidor
+    print("[INFO] Ejecutando convertir_historico.py…")
+    subprocess.check_call(["python", "convertir_historico.py"])
 
-def _iso(dmy: str):
-    d = datetime.strptime(dmy, "%d-%m-%Y").date()
-    return d.isoformat()
+    # 4) Valida JSON final
+    if not es_json_valido(DEST_JSON):
+        raise SystemExit(f"{DEST_JSON} generado no es JSON válido.")
 
-def convertir():
-    data = {
-        "Aceite de oliva virgen extra": [],
-        "Aceite de oliva virgen": [],
-        "Aceite de oliva lampante": [],
-    }
-
-    # Leemos el TXT crudo
-    with open(SRC_TXT, "r", encoding="utf-8") as f:
-        lines = [ln.strip() for ln in f if ln.strip()]
-
-    fecha_actual_iso = None
-    # Limpiadores de ruido
-    basura = (
-        "tipo de aceite", "variedad", "precio €/kg",
-        "sin cierre de operaciones", "about:blank"
-    )
-
-    for ln in lines:
-        lo = ln.lower()
-        # Salta cabeceras/ruido
-        if any(b in lo for b in basura):
-            continue
-
-        # Captura fecha (si hay), y guarda como "fecha actual"
-        m = re_fecha.search(ln)
-        if m:
-            try:
-                fecha_actual_iso = _iso(m.group(1))
-            except:
-                fecha_actual_iso = None
-            continue
-
-        if not fecha_actual_iso:
-            # No tenemos fecha asignada aún; continúa
-            continue
-
-        # Detecta tipo y precio en líneas de producto
-        tipo = _tipo_desde_linea(ln)
-        if not tipo:
-            continue
-
-        precio = _precio_desde_linea(ln)
-        if precio is None:
-            continue
-
-        data[tipo].append({
-            "fecha": fecha_actual_iso,
-            "precio_eur_kg": round(precio, 3)
-        })
-
-    # Ordena por fecha y quita duplicados (misma fecha para un tipo)
-    for k in data:
-        seen = set()
-        ordenados = []
-        for item in sorted(data[k], key=lambda x: x["fecha"]):
-            clave = item["fecha"]
-            if clave in seen:
-                # Si el mismo día aparece más de una vez, nos quedamos con el último
-                ordenados[-1] = item
-            else:
-                seen.add(clave)
-                ordenados.append(item)
-        data[k] = ordenados
-
-    with open(DEST_JSON, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-    print(f"OK → {DEST_JSON} generado con {sum(len(v) for v in data.values())} puntos.")
+    print("[OK] Histórico actualizado y validado.")
 
 if __name__ == "__main__":
-    convertir()
+    main()
