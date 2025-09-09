@@ -1,113 +1,119 @@
-# convertir_historico.py
+# -*- coding: utf-8 -*-
+"""
+Lee el archivo 'historico.txt' (raíz del repo) con tu formato de líneas
+y genera 'precio-aceite-historico.json' (también en la raíz del repo)
+en el formato que usa la web.
+
+Formato de salida:
+{
+  "Aceite de oliva virgen extra": [{ "fecha": "YYYY-MM-DD", "precio_eur_kg": 3.123 }, ...],
+  "Aceite de oliva virgen":       [{ ... }],
+  "Aceite de oliva lampante":     [{ ... }]
+}
+"""
+
 import json
 import re
 from datetime import datetime
 
-SRC_TXT = "historico.txt"                    # <-- el TXT crudo
-DEST_JSON = "precio-aceite-historico.json"   # <-- salida JSON
+INPUT_FILE  = "historico.txt"
+OUTPUT_FILE = "precio-aceite-historico.json"
 
-# Normaliza "3,455 €" -> 3.455 (float)
-def _num(s: str):
-    s = s.replace("€", "").replace(" ", "").replace(",", ".")
-    try:
-        return float(s)
-    except:
+# Estructura de salida
+data = {
+    "Aceite de oliva virgen extra": [],
+    "Aceite de oliva virgen": [],
+    "Aceite de oliva lampante": []
+}
+
+# Regex para fecha "dd-mm-yyyy"
+rgx_fecha = re.compile(r"^(\d{2})-(\d{2})-(\d{4})\s*$")
+
+# Normaliza "3.333 €" / "3,333 €" -> 3.333
+def parse_precio(txt):
+    if txt is None:
         return None
+    txt = txt.strip().replace("€", "").replace(" ", "")
+    txt = txt.replace(",", ".")
+    try:
+        v = float(txt)
+        # filtro básico para evitar valores basura
+        if 0 < v < 50:
+            return v
+    except:
+        pass
+    return None
 
-# Mapea una línea a tipo de aceite
-def _tipo_desde_linea(line: str):
-    l = line.lower()
-    if "virgen extra" in l:
+# Mapea texto de la línea a la clave del dataset
+def clave_producto(linea):
+    s = linea.lower()
+    if "virgen extra" in s:
         return "Aceite de oliva virgen extra"
-    if re.search(r"\bvirgen\b", l) and "extra" not in l:
+    if " virgen " in s and "extra" not in s:
         return "Aceite de oliva virgen"
-    if "lampante" in l:
+    if "lampante" in s:
         return "Aceite de oliva lampante"
     return None
 
-# Extrae "3.833" de "3.833 €" o "3,833 €"
-def _precio_desde_linea(line: str):
-    m = re.search(r"(\d+[.,]\d+)\s*€", line)
-    if not m:
-        return None
-    return _num(m.group(1))
-
-# Extrae fecha DD-MM-YYYY
-re_fecha = re.compile(r"\b(\d{2}-\d{2}-\d{4})\b")
-
-def _iso(dmy: str):
-    d = datetime.strptime(dmy, "%d-%m-%Y").date()
-    return d.isoformat()
-
-def convertir():
-    data = {
-        "Aceite de oliva virgen extra": [],
-        "Aceite de oliva virgen": [],
-        "Aceite de oliva lampante": [],
-    }
-
-    # Leemos el TXT crudo
-    with open(SRC_TXT, "r", encoding="utf-8") as f:
-        lines = [ln.strip() for ln in f if ln.strip()]
+def main():
+    try:
+        with open(INPUT_FILE, "r", encoding="utf-8") as f:
+            lineas = [l.rstrip("\n") for l in f]
+    except FileNotFoundError:
+        raise SystemExit(f"No existe {INPUT_FILE} en la raíz del repo.")
 
     fecha_actual_iso = None
-    # Limpiadores de ruido
-    basura = (
-        "tipo de aceite", "variedad", "precio €/kg",
-        "sin cierre de operaciones", "about:blank"
-    )
 
-    for ln in lines:
-        lo = ln.lower()
-        # Salta cabeceras/ruido
-        if any(b in lo for b in basura):
-            continue
+    for raw in lineas:
+        linea = raw.strip()
 
-        # Captura fecha (si hay), y guarda como "fecha actual"
-        m = re_fecha.search(ln)
+        # Detecta fecha (ej: 31-07-2014)
+        m = rgx_fecha.match(linea)
         if m:
+            d, mth, y = m.groups()
             try:
-                fecha_actual_iso = _iso(m.group(1))
-            except:
+                fecha_actual_iso = datetime(int(y), int(mth), int(d)).strftime("%Y-%m-%d")
+            except ValueError:
                 fecha_actual_iso = None
             continue
 
-        if not fecha_actual_iso:
-            # No tenemos fecha asignada aún; continúa
+        if not linea or not fecha_actual_iso:
             continue
 
-        # Detecta tipo y precio en líneas de producto
-        tipo = _tipo_desde_linea(ln)
-        if not tipo:
+        # Ignora cabeceras/ruido
+        lower = linea.lower()
+        if "sin cierre de operaciones" in lower or "about:blank" in lower:
+            continue
+        if "tipo de aceite" in lower and "precio" in lower:
             continue
 
-        precio = _precio_desde_linea(ln)
+        # Intenta extraer producto y precio
+        clave = clave_producto(linea)
+        if not clave:
+            continue
+
+        # Precio suele ir como "... 3.333 €" -> nos quedamos con el último token con símbolo €
+        tokens = [t for t in linea.replace(",", ".").split() if "€" in t]
+        precio = parse_precio(tokens[-1] if tokens else None)
         if precio is None:
             continue
 
-        data[tipo].append({
+        data[clave].append({
             "fecha": fecha_actual_iso,
             "precio_eur_kg": round(precio, 3)
         })
 
-    # Ordena por fecha y quita duplicados (misma fecha para un tipo)
+    # Ordena por fecha ascendente en cada serie
     for k in data:
-        seen = set()
-        ordenados = []
-        for item in sorted(data[k], key=lambda x: x["fecha"]):
-            clave = item["fecha"]
-            if clave in seen:
-                # Si el mismo día aparece más de una vez, nos quedamos con el último
-                ordenados[-1] = item
-            else:
-                seen.add(clave)
-                ordenados.append(item)
-        data[k] = ordenados
+        data[k].sort(key=lambda x: x["fecha"])
 
-    with open(DEST_JSON, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    # Escribe JSON en la RAÍZ del repo
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as out:
+        json.dump(data, out, ensure_ascii=False, indent=2)
 
-    print(f"OK → {DEST_JSON} generado con {sum(len(v) for v in data.values())} puntos.")
+    print(f"Generado {OUTPUT_FILE} con:")
+    for k, v in data.items():
+        print(f"  - {k}: {len(v)} puntos")
 
 if __name__ == "__main__":
-    convertir()
+    main()
